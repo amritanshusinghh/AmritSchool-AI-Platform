@@ -2,31 +2,26 @@ import React, { useEffect, useState, useRef } from 'react';
 import io from 'socket.io-client';
 import { getToken } from '../../utils/authUtils';
 import { Timer } from './Timer';
-import { BASE_URL } from '../../config'; // Import BASE_URL
+import { BASE_URL } from '../../config';
 
 const StudyRoom = () => {
     const [socket, setSocket] = useState(null);
     const [messages, setMessages] = useState([]);
     const [input, setInput] = useState('');
-    const messagesEndRef = useRef(null);
-    const studyRoomId = "study-room-main"; // A dedicated ID for this study room
+    
+    // Create a ref for the scrollable chat container
+    const chatContainerRef = useRef(null);
+    const studyRoomId = "study-room-main";
 
     useEffect(() => {
-        // Use BASE_URL for the socket connection
         const newSocket = io(BASE_URL, {
             auth: { token: getToken() }
         });
         setSocket(newSocket);
-
-        // Join the specific study room
         newSocket.emit('joinRoom', studyRoomId);
-
-        // Listen for messages broadcast to this room
         newSocket.on('receiveMessage', (msg) => {
             setMessages(prev => [...prev, msg]);
         });
-
-        // Clean up on component unmount
         return () => newSocket.disconnect();
     }, []);
 
@@ -35,35 +30,46 @@ const StudyRoom = () => {
         if (input.trim() && socket) {
             const newMsg = {
                 text: input,
-                sender: 'You', // Optimistically add sender as "You"
+                sender: 'You',
                 timestamp: new Date().toLocaleTimeString()
             };
             setMessages(prev => [...prev, newMsg]);
-
-            // Emit the 'sendMessage' event with the correct payload
             socket.emit('sendMessage', { roomId: studyRoomId, message: input });
             setInput('');
         }
     };
 
-    // Automatically scroll to the latest message
+    // --- THIS IS THE FIX ---
+    // This useEffect now directly controls the scroll position of the chat box.
     useEffect(() => {
-        messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' });
+        if (chatContainerRef.current) {
+            const { scrollHeight, clientHeight } = chatContainerRef.current;
+            chatContainerRef.current.scrollTop = scrollHeight - clientHeight;
+        }
     }, [messages]);
 
     return (
         <>
             <Timer />
-
             <div className="card">
                 <h3>Group Chat</h3>
-                <div style={{ height: '300px', overflowY: 'scroll', border: '1px solid #ccc', padding: '10px', marginBottom: '1rem', borderRadius: 'var(--border-radius)' }}>
+                <div 
+                    ref={chatContainerRef} // Attach the ref to the scrollable div
+                    style={{ 
+                        height: '300px', 
+                        overflowY: 'scroll', 
+                        border: '1px solid #ccc', 
+                        padding: '10px', 
+                        marginBottom: '1rem', 
+                        borderRadius: 'var(--border-radius)' 
+                    }}
+                >
                     {messages.map((msg, idx) => (
                         <div key={idx}>
                             <strong>{msg.sender || 'User'}:</strong> {msg.text || msg.message}
                         </div>
                     ))}
-                    <div ref={messagesEndRef} />
+                    {/* The messagesEndRef is no longer needed */}
                 </div>
                 <form onSubmit={handleSend} style={{ display: 'flex', gap: '1rem' }}>
                     <input

@@ -6,8 +6,10 @@ const ChatRoom = () => {
   const [socket, setSocket] = useState(null);
   const [message, setMessage] = useState("");
   const [messages, setMessages] = useState([]);
-  const messagesEndRef = useRef(null);
-  const chatRoomId = "study-group-1"; // Using a fixed room ID for all users
+  
+  // Create a ref for the scrollable chat container
+  const chatContainerRef = useRef(null); 
+  const chatRoomId = "study-group-1";
 
   // Initialize Socket Connection
   useEffect(() => {
@@ -17,37 +19,33 @@ const ChatRoom = () => {
       },
     });
     setSocket(newSocket);
-
-    // Join the chat room
     newSocket.emit("joinRoom", chatRoomId);
-
     newSocket.on("receiveMessage", (msg) => {
       setMessages((prev) => [...prev, msg]);
     });
-
-    // Clean up the connection when the component is unmounted
     return () => {
       newSocket.disconnect();
     };
-  }, []); // The empty dependency array ensures this runs only once.
+  }, []);
 
-  // Scroll to latest message
-  // useEffect(() => {
-  //   messagesEndRef.current?.scrollIntoView({ behavior: "smooth" });
-  // }, [messages]);
+  // --- THIS IS THE FIX ---
+  // This useEffect now directly controls the scroll position of the chat box.
+  useEffect(() => {
+    if (chatContainerRef.current) {
+      const { scrollHeight, clientHeight } = chatContainerRef.current;
+      chatContainerRef.current.scrollTop = scrollHeight - clientHeight;
+    }
+  }, [messages]);
 
   const sendMessage = (e) => {
     e.preventDefault();
-    if (!message.trim() || !socket) return; // Also check if socket is initialized
-
+    if (!message.trim() || !socket) return;
     const newMsg = {
       text: message,
       sender: "You",
       timestamp: new Date().toLocaleTimeString(),
     };
-
     setMessages((prev) => [...prev, newMsg]);
-    // FIX: Emit 'sendMessage' with the correct payload
     socket.emit("sendMessage", { roomId: chatRoomId, message: message });
     setMessage("");
   };
@@ -56,6 +54,7 @@ const ChatRoom = () => {
     <div style={{ padding: "2rem" }}>
       <h2>💬 Real-time Chat Room</h2>
       <div
+        ref={chatContainerRef} // Attach the ref to the scrollable div
         style={{
           border: "1px solid #ccc",
           height: "300px",
@@ -72,7 +71,7 @@ const ChatRoom = () => {
             </span>
           </div>
         ))}
-        <div ref={messagesEndRef} />
+        {/* The messagesEndRef is no longer needed for this method */}
       </div>
       <form onSubmit={sendMessage}>
         <input

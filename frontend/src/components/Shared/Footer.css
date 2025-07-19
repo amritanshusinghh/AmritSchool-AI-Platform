@@ -1,0 +1,19 @@
+.footer-container {
+    margin-top: 2rem;
+    padding: 2rem; /* Increased padding for better spacing */
+    border-top: 1px solid #ddd;
+    text-align: center;
+    background-color: #fcfcfc;
+}
+
+.developer-link {
+    font-weight: 600;
+    color: var(--primary-color); /* Use the primary color from App.css */
+    text-decoration: none;
+    transition: color 0.3s ease;
+}
+
+.developer-link:hover {
+    color: var(--secondary-color); /* Change to secondary color on hover */
+    text-decoration: underline;
+}

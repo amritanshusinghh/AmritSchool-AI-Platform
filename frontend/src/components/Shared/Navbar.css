@@ -1,0 +1,140 @@
+/* Navbar.css */
+.navbar {
+    background: var(--card-bg-color);
+    box-shadow: var(--shadow);
+    padding: 1rem 0;
+    position: sticky;
+    top: 0;
+    z-index: 1000;
+}
+
+.navbar .container {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 0 2rem;
+}
+
+.navbar-brand {
+    font-size: 1.5rem;
+    font-weight: 700;
+    color: var(--primary-color);
+    z-index: 1001; /* Ensure brand is above overlay */
+}
+
+.nav-menu {
+    display: flex;
+    align-items: center;
+    gap: 1.5rem;
+}
+
+.nav-links {
+    display: flex;
+    align-items: center;
+    gap: 1rem;
+}
+
+.auth-links {
+    display: flex;
+    align-items: center;
+    gap: 1rem;
+}
+
+.nav-links a, .auth-links a, .auth-links .logout-btn {
+    margin: 0 0.5rem;
+    font-weight: 600;
+    padding: 8px 0;
+    background: none;
+    border: none;
+    font-size: 1rem;
+    color: var(--text-color);
+}
+
+.auth-links .register-btn {
+    background: linear-gradient(to right, var(--primary-color), var(--secondary-color));
+    color: white;
+    padding: 8px 16px;
+    border-radius: var(--border-radius);
+}
+
+.auth-links .logout-btn {
+    cursor: pointer;
+}
+
+/* Hamburger Menu Button */
+.menu-toggle {
+    display: none;
+    flex-direction: column;
+    justify-content: space-around;
+    width: 2rem;
+    height: 1.5rem;
+    background: transparent;
+    border: none;
+    cursor: pointer;
+    padding: 0;
+    z-index: 1001; /* Ensure button is above overlay */
+}
+
+.menu-toggle span {
+    display: block;
+    width: 2rem;
+    height: 0.2rem;
+    background: var(--text-color);
+    border-radius: 10px;
+    transition: all 0.3s ease-in-out;
+}
+
+/* Hamburger animation to 'X' */
+.menu-toggle.active span:nth-child(1) {
+    transform: rotate(45deg) translate(5px, 5px);
+}
+.menu-toggle.active span:nth-child(2) {
+    opacity: 0;
+}
+.menu-toggle.active span:nth-child(3) {
+    transform: rotate(-45deg) translate(7px, -6px);
+}
+
+/* Dark overlay for when menu is open */
+.overlay {
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background: rgba(0, 0, 0, 0.5);
+    z-index: 998;
+}
+
+/* Responsive Styles */
+@media (max-width: 810px) {
+    .menu-toggle {
+        display: flex;
+    }
+
+    .nav-menu {
+        position: fixed;
+        top: 0;
+        right: -100%;
+        width: 70%;
+        max-width: 300px;
+        height: 100vh;
+        background: var(--card-bg-color);
+        flex-direction: column;
+        justify-content: center;
+        align-items: center;
+        gap: 2rem;
+        transition: right 0.3s ease-in-out;
+        box-shadow: -5px 0 15px rgba(0, 0, 0, 0.1);
+        z-index: 999;
+    }
+
+    .nav-menu.active {
+        right: 0;
+    }
+
+    .nav-links, .auth-links {
+        flex-direction: column;
+        gap: 1.5rem;
+    }
+}

@@ -7,18 +7,19 @@ const Layout = ({ children }) => {
     return (
         <>
             <Toaster
-                // Change the position to 'top-center'
                 position="top-center"
+                // Add this containerStyle to push the toasts down
+                containerStyle={{
+                    top: 85,
+                }}
                 toastOptions={{
-                    // Define default options
                     duration: 5000,
                     style: {
                         background: '#363636',
                         color: '#fff',
                     },
-                    // Default options for specific types
                     success: {
-                        duration: 3000,
+                        duration: 1500,
                         theme: {
                             primary: 'green',
                             secondary: 'black',

@@ -5,7 +5,7 @@ import RoadmapBuilder from '../components/Roadmap/RoadmapBuilder';
 const RoadmapPage = () => {
     return (
         <Layout>
-            <h1>Roadmap Builder 🗺️</h1>
+            
             <RoadmapBuilder />
         </Layout>
     );

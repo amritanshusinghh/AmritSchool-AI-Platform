@@ -28,12 +28,12 @@ const Quiz = () => {
             const quizData = await getQuiz(topic);
             if (quizData && quizData.questions) {
                 setQuiz(quizData);
-                toast.success('Quiz generated successfully!', { id: toastId });
+                // toast.success('Quiz generated successfully!', { id: toastId });
             } else {
                 throw new Error("Received invalid quiz data from AI.");
             }
         } catch (err) {
-            toast.error(err.message || 'Failed to generate quiz.', { id: toastId });
+            // toast.error(err.message || 'Failed to generate quiz.', { id: toastId });
         } finally {
             setLoading(false);
         }

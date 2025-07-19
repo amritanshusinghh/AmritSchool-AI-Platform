@@ -7,7 +7,8 @@ const Layout = ({ children }) => {
     return (
         <>
             <Toaster
-                position="top-right"
+                // Change the position to 'top-center'
+                position="top-center"
                 toastOptions={{
                     // Define default options
                     duration: 5000,

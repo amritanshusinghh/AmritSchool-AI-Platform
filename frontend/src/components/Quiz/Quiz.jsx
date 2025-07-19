@@ -21,7 +21,7 @@ const Quiz = () => {
         setQuiz(null);
         setAnswers({});
         setScore(null);
-        const toastId = toast.loading('Generating your quiz...');
+        // const toastId = toast.loading('Generating your quiz...');
 
         try {
             // FIX: Call the correctly imported 'getQuiz' function

@@ -1,22 +1,31 @@
 import API from './api';
 
-export const askAI = (query) => API.post('/ai/chat', { query });
+export const askAI = async (query) => {
+  try {
+    const { data } = await API.post('/ai/chat', { query });
+    if (data.status === 'success' && data.response) {
+      return data.response; // Return only the AI's text response
+    }
+    throw new Error(data.error || 'AI request failed with no error message.');
+  } catch (err) {
+    // Re-throw the error to be caught by the component
+    throw new Error(err.response?.data?.error || err.message || 'An unknown error occurred.');
+  }
+};
 
 export const getQuiz = async (topic) => {
-  // The backend now sends fully parsed JSON.
   const { data } = await API.post('/ai/quiz', { topic });
   if (data.status === 'success' && data.quiz) {
-    return data.quiz; // Return the quiz object directly
+    return data.quiz;
   } else {
     throw new Error(data.error || 'Failed to retrieve quiz from server.');
   }
 };
 
 export const getRoadmap = async (goal) => {
-  // The backend now sends fully parsed JSON.
   const { data } = await API.post('/ai/roadmap', { goal });
   if (data.status === 'success' && data.roadmap) {
-    return data.roadmap; // Return the roadmap object directly
+    return data.roadmap;
   } else {
     throw new Error(data.error || 'Failed to retrieve roadmap from server.');
   }

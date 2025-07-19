@@ -1,49 +1,44 @@
-import { GoogleGenerativeAI, HarmCategory, HarmBlockThreshold } from '@google/generative-ai';
+import { HfInference } from "@huggingface/inference";
 import dotenv from 'dotenv';
 
 dotenv.config();
 
-if (!process.env.GEMINI_API_KEY) {
-  throw new Error("GEMINI_API_KEY is not defined in the .env file.");
+if (!process.env.HF_TOKEN) {
+  throw new Error("HF_TOKEN is not defined in the .env file.");
 }
 
-const genAI = new GoogleGenerativeAI(process.env.GEMINI_API_KEY);
+const hf = new HfInference(process.env.HF_TOKEN);
 
-// This is a standard model for the conversational chatbot, which doesn't need JSON.
-const standardModel = genAI.getGenerativeModel({ model: "gemini-1.5-flash" });
-
-// --- THIS IS THE DEFINITIVE FIX ---
-// This model is specifically configured to ONLY output JSON that matches our defined schema.
-const jsonModel = genAI.getGenerativeModel({
-  model: "gemini-1.5-flash",
-  generationConfig: {
-    responseMimeType: "application/json",
-  },
-  // Safety settings are adjusted to be less restrictive for JSON generation.
-  safetySettings: [
-    { category: HarmCategory.HARM_CATEGORY_HARASSMENT, threshold: HarmBlockThreshold.BLOCK_NONE },
-    { category: HarmCategory.HARM_CATEGORY_HATE_SPEECH, threshold: HarmBlockThreshold.BLOCK_NONE },
-    { category: HarmCategory.HARM_CATEGORY_SEXUALLY_EXPLICIT, threshold: HarmBlockThreshold.BLOCK_NONE },
-    { category: HarmCategory.HARM_CATEGORY_DANGEROUS_CONTENT, threshold: HarmBlockThreshold.BLOCK_NONE },
-  ],
-});
+// Using a recommended model for chat/instruction-following tasks
+const model = "mistralai/Mixtral-8x7B-Instruct-v0.1";
 
 /**
  * Provides a conversational response to a user's query.
  */
 export const aiChatBot = async (query) => {
-  const prompt = `You are a helpful and friendly AI assistant. Answer the following user query in a conversational way. User Query: "${query}"`;
-  const result = await standardModel.generateContent(prompt);
-  return result.response.text();
+  try {
+    const result = await hf.chatCompletion({
+      model: model,
+      messages: [
+        { role: "system", content: "You are a helpful and friendly AI assistant." },
+        { role: "user", content: query }
+      ],
+      max_tokens: 500,
+    });
+    return result.choices[0].message.content;
+  } catch (error) {
+    console.error("Backend AI Error (Chat):", error);
+    throw new Error("The AI failed to generate a chat response. The model may be temporarily unavailable.");
+  }
 };
 
 /**
- * Generates a learning roadmap for a given goal using a strict JSON Schema.
+ * Generates a learning roadmap for a given goal.
  * @param {string} goal The learning goal.
  * @returns {Promise<object>} A valid roadmap object.
  */
 export const generateRoadmap = async (goal) => {
-  const prompt = `Create a detailed, 4-step learning roadmap for the goal: "${goal}". You must follow the provided JSON schema precisely.
+  const prompt = `Create a detailed, 4-step learning roadmap for the goal: "${goal}". You must respond with only the raw JSON object, without any surrounding text, explanations, or markdown formatting.
 
   The JSON schema is:
   {
@@ -61,28 +56,31 @@ export const generateRoadmap = async (goal) => {
   }`;
 
   try {
-    const result = await jsonModel.generateContent(prompt);
-    const rawText = result.response.text();
-    console.log("Guaranteed AI JSON Response (Roadmap):", rawText);
-    return JSON.parse(rawText); // Directly parse the guaranteed JSON response
+    const result = await hf.chatCompletion({
+      model: model,
+      messages: [{ role: "user", content: prompt }],
+      max_tokens: 1500,
+    });
+
+    const responseText = result.choices[0].message.content;
+    const jsonResponse = responseText.substring(responseText.indexOf('{'));
+    return JSON.parse(jsonResponse);
   } catch (error) {
     console.error("Backend AI Error (Roadmap):", error);
-    throw new Error("The AI failed to generate a valid roadmap structure, even with a schema. The model may be temporarily unavailable or the request was blocked.");
+    throw new Error("The AI failed to generate a valid roadmap. The model may be temporarily unavailable.");
   }
 };
 
 /**
- * Generates a multiple-choice quiz on a given topic using a strict JSON Schema.
+ * Generates a multiple-choice quiz on a given topic.
  * @param {string} topic The topic for the quiz.
  * @returns {Promise<object>} A valid quiz object.
  */
 export const generateQuiz = async (topic) => {
-  // --- THIS IS THE FIX ---
-  // Added the specific JSON schema to the prompt to ensure a valid response.
   const prompt = `
     Generate a multiple-choice quiz about: "${topic}".
     It must have exactly 5 questions, and each question must have exactly 4 options.
-    You must follow the provided JSON schema precisely.
+    You must respond with only the raw JSON object, without any surrounding text, explanations, or markdown formatting.
 
     The JSON schema is:
     {
@@ -98,10 +96,15 @@ export const generateQuiz = async (topic) => {
   `;
 
   try {
-    const result = await jsonModel.generateContent(prompt);
-    const rawText = result.response.text();
-    console.log("Guaranteed AI JSON Response (Quiz):", rawText);
-    return JSON.parse(rawText);
+    const result = await hf.chatCompletion({
+      model: model,
+      messages: [{ role: "user", content: prompt }],
+      max_tokens: 2048,
+    });
+    
+    const responseText = result.choices[0].message.content;
+    const jsonResponse = responseText.substring(responseText.indexOf('{'));
+    return JSON.parse(jsonResponse);
   } catch (error) {
     console.error("Backend AI Error (Quiz):", error);
     throw new Error("The AI failed to generate a valid quiz structure.");

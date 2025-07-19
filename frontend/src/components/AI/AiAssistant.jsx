@@ -1,5 +1,6 @@
 import React, { useState } from 'react';
-import api from '../../services/api';
+import ReactMarkdown from 'react-markdown';
+import { askAI } from '../../services/aiService'; // Import the service function
 
 const AiAssistant = () => {
     const [query, setQuery] = useState('');
@@ -19,20 +20,12 @@ const AiAssistant = () => {
         setError('');
 
         try {
-            const { data } = await api.post('/ai/chat', { query: query.trim() });
-            
-            if (data.status === 'success') {
-                setResponse(data.response || 'AI responded but content is empty');
-            } else {
-                setError(data.error || 'AI request failed');
-            }
+            // The service now returns the string directly
+            const aiResponse = await askAI(query.trim());
+            setResponse(aiResponse);
         } catch (err) {
             console.error('AI request error:', err);
-            const errorMessage = err?.response?.data?.response || 
-                                err?.response?.data?.error || 
-                                err?.message || 
-                                'AI request failed';
-            setError(errorMessage);
+            setError(err.message || 'AI request failed');
         } finally {
             setLoading(false);
         }
@@ -114,7 +107,6 @@ const AiAssistant = () => {
                 </div>
             </form>
 
-            {/* Suggested Questions */}
             <div style={{ marginBottom: '1rem' }}>
                 <h4>💡 Suggested Questions:</h4>
                 <div style={{ display: 'flex', flexWrap: 'wrap', gap: '10px' }}>
@@ -137,21 +129,20 @@ const AiAssistant = () => {
                 </div>
             </div>
 
-            {/* Response Display */}
             {response && (
                 <div style={{ 
                     marginTop: '1rem', 
                     padding: '1rem', 
                     backgroundColor: '#e8f5e8',
                     border: '1px solid #c3e6c3',
-                    borderRadius: '5px'
+                    borderRadius: '5px',
+                    lineHeight: '1.6'
                 }}>
                     <strong>🤖 AI Response:</strong>
-                    <p style={{ marginTop: '0.5rem', lineHeight: '1.6' }}>{response}</p>
+                    <ReactMarkdown>{response}</ReactMarkdown>
                 </div>
             )}
 
-            {/* Error Display */}
             {error && (
                 <div style={{ 
                     marginTop: '1rem', 
@@ -165,7 +156,6 @@ const AiAssistant = () => {
                 </div>
             )}
 
-            {/* Loading Indicator */}
             {loading && (
                 <div style={{ 
                     marginTop: '1rem', 

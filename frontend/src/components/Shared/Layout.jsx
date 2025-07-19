@@ -13,7 +13,7 @@ const Layout = ({ children }) => {
                     top: 85,
                 }}
                 toastOptions={{
-                    duration: 5000,
+                    duration: 1500,
                     style: {
                         background: '#363636',
                         color: '#fff',

@@ -74,7 +74,7 @@ const HomePage = () => {
                     <div className="testimonials-grid">
                         <div className="testimonial-card">
                             <p>"Amrit's School's AI Assistant is a lifesaver for my computer science homework. The explanations are clear and concise!"</p>
-                            <h4>- Sneha, College Student</h4>
+                            <h4>- Harshit, College Student</h4>
                         </div>
                         <div className="testimonial-card">
                             <p>"The roadmap generator gave me a clear path to learn React. I went from novice to building my own project in weeks."</p>
@@ -82,7 +82,7 @@ const HomePage = () => {
                         </div>
                         <div className="testimonial-card">
                             <p>"The focused study rooms have been amazing for my productivity. The group timer keeps everyone accountable."</p>
-                            <h4>- Amit Chaudhary, AITH Kanpur</h4>
+                            <h4>- Amit, AITH Kanpur</h4>
                         </div>
                     </div>
                 </div>

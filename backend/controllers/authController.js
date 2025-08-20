@@ -3,6 +3,20 @@ import jwt from "jsonwebtoken";
 import User from "../models/User.js";
 import { sendOtp, verifyOtp } from "../services/otpService.js";
 
+// --- START: New Feature ---
+// List of allowed email domains to prevent temporary email services
+const allowedDomains = [
+    'gmail.com',
+    'yahoo.com',
+    'outlook.com',
+    'hotmail.com',
+    'icloud.com',
+    'aol.com',
+    'protonmail.com'
+    // You can add more trusted domains here
+];
+// --- END: New Feature ---
+
 export const register = async (req, res) => {
     try {
         const { name, email, password } = req.body;
@@ -11,6 +25,18 @@ export const register = async (req, res) => {
         if (!email || !email.includes("@")) {
             return res.status(400).json({ message: "❌ Invalid or missing email address" });
         }
+        
+        // --- START: New Feature ---
+        // Extract the domain from the email to validate it
+        const domain = email.substring(email.lastIndexOf("@") + 1);
+
+        // Check if the domain is in the allowed list
+        if (!allowedDomains.includes(domain.toLowerCase())) {
+            return res.status(400).json({ 
+                message: "❌ Popular email providers only." 
+            });
+        }
+        // --- END: New Feature ---
 
         const hashedPassword = await bcrypt.hash(password, 10);
         const user = await User.create({ name, email, password: hashedPassword });

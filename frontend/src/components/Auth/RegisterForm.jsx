@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { registerUser } from '../../services/authService';
 import { toast } from 'react-hot-toast';
@@ -11,8 +11,37 @@ const RegisterForm = () => {
     const [loading, setLoading] = useState(false);
     const navigate = useNavigate();
 
+    // --- START: New Password Strength Feature ---
+    const [passwordError, setPasswordError] = useState('');
+    const [isPasswordValid, setIsPasswordValid] = useState(false);
+
+    useEffect(() => {
+        if (password.length > 0) {
+            // Password must be at least 6 chars, with one letter and one number
+            const passwordRegex = /^(?=.*[A-Za-z])(?=.*\d)[A-Za-z\d]{6,}$/;
+            if (!passwordRegex.test(password)) {
+                setPasswordError("Your password must be at least 6 characters and include a mix of letters and numbers.");
+                setIsPasswordValid(false);
+            } else {
+                setPasswordError('');
+                setIsPasswordValid(true);
+            }
+        } else {
+            setPasswordError('');
+            setIsPasswordValid(false);
+        }
+    }, [password]);
+    // --- END: New Password Strength Feature ---
+
     const handleRegister = async (e) => {
         e.preventDefault();
+        // --- START: New Password Strength Feature ---
+        if (!isPasswordValid) {
+            toast.error("Please enter a valid password.");
+            return;
+        }
+        // --- END: New Password Strength Feature ---
+
         setLoading(true);
         const toastId = toast.loading('Registering...');
         try {
@@ -52,7 +81,10 @@ const RegisterForm = () => {
                         placeholder="Password"
                         required
                     />
-                    <button type="submit" disabled={loading}>
+                    {/* --- START: New Password Strength Feature --- */}
+                    {passwordError && <p style={{ color: 'red', fontSize: '0.8rem', marginTop: '-0.5rem', marginBottom: '1rem' }}>{passwordError}</p>}
+                    {/* --- END: New Password Strength Feature --- */}
+                    <button type="submit" disabled={loading || !isPasswordValid}>
                         {loading ? 'Registering...' : 'Register'}
                     </button>
                 </form>

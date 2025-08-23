@@ -17,7 +17,17 @@ const allowedDomains = [
 export const register = async (req, res) => {
     try {
         const { name, email, password } = req.body;
-        
+
+        // --- START: New Password Strength Feature ---
+        // Password validation regex: at least one letter and one number
+        const passwordRegex = /^(?=.*[A-Za-z])(?=.*\d)[A-Za-z\d]{6,}$/;
+        if (!password || !passwordRegex.test(password)) {
+            return res.status(400).json({ 
+                message: "Your password must be at least 6 characters and include a mix of letters and numbers." 
+            });
+        }
+        // --- END: New Password Strength Feature ---
+
         if (!email || !email.includes("@")) {
             return res.status(400).json({ message: "Invalid or missing email address" });
         }
@@ -27,24 +37,19 @@ export const register = async (req, res) => {
             return res.status(400).json({ message: "Popular email providers only." });
         }
 
-        // --- START: New Registration Logic ---
-        // Check if a verified user with this email already exists
         const verifiedUser = await User.findOne({ email });
         if (verifiedUser) {
-            return res.status(409).json({ message: "This email is already registered and verified. Please log in." });
+            return res.status(409).json({ message: "This email is already registered. Please log in." });
         }
 
-        // Remove any previous unverified attempts with the same email
         await UnverifiedUser.deleteOne({ email });
 
         const hashedPassword = await bcrypt.hash(password, 10);
         
-        // Create a record in the UnverifiedUser collection
         await UnverifiedUser.create({ name, email, password: hashedPassword });
 
         await sendOtp(email);
         res.status(201).json({ message: "Registered successfully. An OTP has been sent to your email." });
-        // --- END: New Registration Logic ---
 
     } catch (error) {
         console.error("Registration error:", error.message);
@@ -96,7 +101,7 @@ export const login = async (req, res) => {
         const isMatch = await bcrypt.compare(password, user.password);
         if (!isMatch) return res.status(400).json({ message: "Incorrect password" });
 
-        const token = jwt.sign({ id: user._id }, process.env.JWT_SECRET, { expiresIn: "24h" });
+        const token = jwt.sign({ id: user._id }, process.env.JWT_SECRET, { expiresIn: "7d" });
         res.json({ token, message: " Login Successful" });
     } catch (error) {
         console.error("Login error:", error.message);

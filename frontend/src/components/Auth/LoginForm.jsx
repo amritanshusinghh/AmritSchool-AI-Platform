@@ -16,8 +16,14 @@ const LoginForm = () => {
         setLoading(true);
         const toastId = toast.loading('Logging in...');
         try {
+            // The response from axios is an object like { data: { token: '...' } }
             const response = await loginUser({ email, password });
-            saveToken(response.token);
+
+            // --- THIS IS THE FIX ---
+            // Access the token from response.data.token
+            saveToken(response.data.token); 
+            // --- END OF FIX ---
+
             toast.success('Login successful!', { id: toastId });
             navigate('/dashboard');
         } catch (err) {

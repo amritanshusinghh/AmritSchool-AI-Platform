@@ -1,6 +1,8 @@
+import Message from "../models/Message.js";
+// No need to import User model here anymore
+
 export const chatSocketHandler = (io) => {
     io.on("connection", (socket) => {
-        // You can now access the username from the authenticated socket
         console.log("User connected:", socket.id, "as", socket.username);
 
         socket.on("joinRoom", (roomId) => {
@@ -8,18 +10,34 @@ export const chatSocketHandler = (io) => {
             console.log(`User ${socket.username} (${socket.id}) joined room ${roomId}`);
         });
 
-        socket.on("sendMessage", ({ roomId, message }) => {
-            // FIX: Broadcast the message with the username instead of the socket ID
-            // Use socket.broadcast to send to everyone except the sender
-            socket.broadcast.to(roomId).emit("receiveMessage", { message, sender: socket.username });
+        socket.on("sendMessage", async ({ roomId, message }) => {
+            const timestamp = new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
+            
+            const messagePayload = { 
+                message, 
+                sender: socket.username,
+                timestamp 
+            };
+
+            socket.broadcast.to(roomId).emit("receiveMessage", messagePayload);
+
+            // --- THIS IS THE FIX ---
+            // Save message to database ONLY if it's the main chat room and the user is authenticated
+            if (roomId === "study-group-1" && socket.userId) {
+                try {
+                    await Message.create({
+                        room: roomId,
+                        sender: socket.userId, // Use the ID from the authenticated socket
+                        text: message
+                    });
+                } catch (error) {
+                    console.error("Error saving message to database:", error);
+                }
+            }
         });
 
         socket.on("disconnect", () => {
-            if (socket.username) {
-                console.log("User disconnected:", socket.id, "as", socket.username);
-            } else {
-                console.log("User disconnected:", socket.id);
-            }
+            console.log("User disconnected:", socket.id, "as", socket.username);
         });
     });
 };

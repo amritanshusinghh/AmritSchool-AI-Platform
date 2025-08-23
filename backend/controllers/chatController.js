@@ -55,3 +55,33 @@ export const postMessage = async (req, res) => {
         res.status(500).json({ message: "Error sending message", error: err.message });
     }
 };
+
+// --- START: New Feature ---
+// Fetch recent messages for a room
+// ... other functions ...
+
+export const getRecentMessages = async (req, res) => {
+    try {
+        const { roomId } = req.params;
+        // --- THIS IS THE FIX ---
+        // Populate the sender's name from the User model
+        const messages = await Message.find({ room: roomId })
+            .populate("sender", "name") 
+            .sort({ createdAt: 1 });
+
+        // Format messages to include the sender's name
+        const formattedMessages = messages.map(msg => {
+            // Ensure sender is not null before accessing name
+            const senderName = msg.sender ? msg.sender.name : 'Unknown User';
+            return {
+                message: msg.text,
+                sender: senderName,
+                timestamp: new Date(msg.createdAt).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })
+            };
+        });
+
+        res.json(formattedMessages);
+    } catch (err) {
+        res.status(500).json({ message: "Error fetching recent messages", error: err.message });
+    }
+};

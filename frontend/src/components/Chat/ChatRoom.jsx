@@ -1,25 +1,19 @@
 import React, { useEffect, useState, useRef } from "react";
 import io from "socket.io-client";
 import { BASE_URL } from "../../config";
-// --- START: New Feature ---
 import { getUserProfile } from '../../services/authService';
 import { getRecentMessages } from '../../services/chatService';
-// --- END: New Feature ---
 
 const ChatRoom = () => {
   const [socket, setSocket] = useState(null);
   const [message, setMessage] = useState("");
   const [messages, setMessages] = useState([]);
-  // --- START: New Feature ---
   const [currentUser, setCurrentUser] = useState(null);
-  // --- END: New Feature ---
   
   const chatContainerRef = useRef(null); 
   const chatRoomId = "study-group-1";
 
   useEffect(() => {
-    // --- START: New Feature ---
-    // Fetch the current user's profile to identify their messages
     const fetchUserProfile = async () => {
         try {
             const { data } = await getUserProfile();
@@ -39,7 +33,6 @@ const ChatRoom = () => {
         }
     };
     fetchMessages();
-    // --- END: New Feature ---
 
     const newSocket = io(BASE_URL, {
       auth: {
@@ -79,6 +72,10 @@ const ChatRoom = () => {
   return (
     <div style={{ padding: "2rem" }}>
       <h2>💬 Real-time Chat Room</h2>
+      <p style={{ fontSize: "0.85rem", color: "#666", marginTop: "-1rem", marginBottom: "1.5rem" }}>
+        Heads up! Messages in this room are saved for 30 days. Please avoid sharing sensitive information.
+      </p>
+      
       <div
         ref={chatContainerRef}
         style={{
@@ -91,13 +88,10 @@ const ChatRoom = () => {
       >
         {messages.map((msg, idx) => (
           <div key={idx} style={{ margin: "0.5rem 0" }}>
-            {/* --- START: New Feature --- */}
-            {/* Conditionally display "You" or the sender's name */}
             <b>{currentUser && msg.sender === currentUser.name ? 'You' : msg.sender}:</b> {msg.text || msg.message}{" "}
             <span style={{ fontSize: "0.8rem", color: "gray" }}>
               ({msg.timestamp})
             </span>
-            {/* --- END: New Feature --- */}
           </div>
         ))}
       </div>

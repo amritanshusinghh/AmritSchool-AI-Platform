@@ -8,7 +8,7 @@ const messageSchema = new mongoose.Schema({
     text: { type: String, required: true },
     // --- START: New Feature ---
     // The 'createdAt' field will now be used for the TTL index
-    createdAt: { type: Date, default: Date.now, expires: '5d' } 
+    createdAt: { type: Date, default: Date.now, expires: '30d' } 
     // --- END: New Feature ---
 });
 

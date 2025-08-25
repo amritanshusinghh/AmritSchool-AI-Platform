@@ -10,7 +10,7 @@ const Navbar = () => {
 
   const handleLogout = () => {
     removeToken();
-    toast("You have been logged out.");
+    toast.success("You have been logged out.");
     navigate("/login");
     setIsMenuOpen(false); // Close menu on logout
   };

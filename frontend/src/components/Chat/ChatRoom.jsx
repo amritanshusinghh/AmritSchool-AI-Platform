@@ -4,6 +4,28 @@ import { BASE_URL } from "../../config";
 import { getUserProfile } from '../../services/authService';
 import { getRecentMessages } from '../../services/chatService';
 
+// --- START: New Date Formatting Feature ---
+const formatDateSeparator = (dateString) => {
+    if (!dateString) return null;
+    const messageDate = new Date(dateString);
+    const today = new Date();
+    const yesterday = new Date();
+    yesterday.setDate(yesterday.getDate() - 1);
+
+    if (messageDate.toDateString() === today.toDateString()) {
+        return 'Today';
+    }
+    if (messageDate.toDateString() === yesterday.toDateString()) {
+        return 'Yesterday';
+    }
+    return messageDate.toLocaleDateString(undefined, {
+        year: 'numeric',
+        month: 'long',
+        day: 'numeric',
+    });
+};
+// --- END: New Date Formatting Feature ---
+
 const ChatRoom = () => {
   const [socket, setSocket] = useState(null);
   const [message, setMessage] = useState("");
@@ -51,8 +73,7 @@ const ChatRoom = () => {
 
   useEffect(() => {
     if (chatContainerRef.current) {
-      const { scrollHeight, clientHeight } = chatContainerRef.current;
-      chatContainerRef.current.scrollTop = scrollHeight - clientHeight;
+      chatContainerRef.current.scrollTop = chatContainerRef.current.scrollHeight;
     }
   }, [messages]);
 
@@ -63,6 +84,7 @@ const ChatRoom = () => {
       text: message,
       sender: "You",
       timestamp: new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }),
+      createdAt: new Date().toISOString()
     };
     setMessages((prev) => [...prev, newMsg]);
     socket.emit("sendMessage", { roomId: chatRoomId, message: message });
@@ -86,14 +108,26 @@ const ChatRoom = () => {
           padding: "1rem",
         }}
       >
-        {messages.map((msg, idx) => (
-          <div key={idx} style={{ margin: "0.5rem 0" }}>
-            <b>{currentUser && msg.sender === currentUser.name ? 'You' : msg.sender}:</b> {msg.text || msg.message}{" "}
-            <span style={{ fontSize: "0.8rem", color: "gray" }}>
-              ({msg.timestamp})
-            </span>
-          </div>
-        ))}
+        {messages.map((msg, idx) => {
+            const showDateSeparator = idx === 0 || 
+                new Date(msg.createdAt).toDateString() !== new Date(messages[idx - 1].createdAt).toDateString();
+            
+            return (
+                <React.Fragment key={idx}>
+                    {showDateSeparator && (
+                        <div style={{ textAlign: 'center', margin: '1rem 0', color: '#888', background: '#f0f0f0', padding: '2px 0', borderRadius: '5px' }}>
+                            <span>{formatDateSeparator(msg.createdAt)}</span>
+                        </div>
+                    )}
+                    <div style={{ margin: "0.5rem 0" }}>
+                        <b>{currentUser && msg.sender === currentUser.name ? 'You' : msg.sender}:</b> {msg.text || msg.message}{" "}
+                        <span style={{ fontSize: "0.8rem", color: "gray" }}>
+                          ({msg.timestamp})
+                        </span>
+                    </div>
+                </React.Fragment>
+            );
+        })}
       </div>
       <form onSubmit={sendMessage}>
         <input

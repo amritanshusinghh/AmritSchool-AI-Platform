@@ -1,5 +1,4 @@
 import Message from "../models/Message.js";
-// No need to import User model here anymore
 
 export const chatSocketHandler = (io) => {
     io.on("connection", (socket) => {
@@ -11,24 +10,27 @@ export const chatSocketHandler = (io) => {
         });
 
         socket.on("sendMessage", async ({ roomId, message }) => {
-            const timestamp = new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
-            
+            // --- THIS IS THE CHANGE ---
+            // Create a full ISO timestamp for accurate date comparison
+            const createdAt = new Date().toISOString(); 
+            const timestamp = new Date(createdAt).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
+
             const messagePayload = { 
                 message, 
                 sender: socket.username,
-                timestamp 
+                timestamp,
+                createdAt // Include the full timestamp
             };
 
             socket.broadcast.to(roomId).emit("receiveMessage", messagePayload);
 
-            // --- THIS IS THE FIX ---
-            // Save message to database ONLY if it's the main chat room and the user is authenticated
             if (roomId === "study-group-1" && socket.userId) {
                 try {
                     await Message.create({
                         room: roomId,
-                        sender: socket.userId, // Use the ID from the authenticated socket
-                        text: message
+                        sender: socket.userId,
+                        text: message,
+                        createdAt: createdAt // Save the full timestamp to the DB
                     });
                 } catch (error) {
                     console.error("Error saving message to database:", error);

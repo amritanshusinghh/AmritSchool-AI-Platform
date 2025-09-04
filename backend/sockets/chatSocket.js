@@ -10,16 +10,13 @@ export const chatSocketHandler = (io) => {
         });
 
         socket.on("sendMessage", async ({ roomId, message }) => {
-            // --- THIS IS THE CHANGE ---
             // Create a full ISO timestamp for accurate date comparison
             const createdAt = new Date().toISOString(); 
-            const timestamp = new Date(createdAt).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
 
             const messagePayload = { 
                 message, 
                 sender: socket.username,
-                timestamp,
-                createdAt // Include the full timestamp
+                createdAt // Send the full timestamp
             };
 
             socket.broadcast.to(roomId).emit("receiveMessage", messagePayload);

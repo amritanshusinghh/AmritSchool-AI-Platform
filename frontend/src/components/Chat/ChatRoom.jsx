@@ -81,7 +81,6 @@ const ChatRoom = () => {
         const newMsg = {
             text: message,
             sender: "You",
-            timestamp: new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }),
             createdAt: new Date().toISOString()
         };
         setMessages((prev) => [...prev, newMsg]);
@@ -89,10 +88,7 @@ const ChatRoom = () => {
         setMessage("");
     };
 
-    // --- START: This is the Fix ---
-    // A more reliable way to render date separators.
     let lastMessageDate = null;
-    // --- END: This is the Fix ---
 
     return (
         <div style={{ padding: "2rem" }}>
@@ -112,8 +108,6 @@ const ChatRoom = () => {
                 }}
             >
                 {messages.map((msg, idx) => {
-                    // --- START: This is the Fix ---
-                    // This logic is now much more robust.
                     let showDateSeparator = false;
                     const currentMessageDate = msg.createdAt ? new Date(msg.createdAt).toDateString() : null;
 
@@ -121,7 +115,6 @@ const ChatRoom = () => {
                         showDateSeparator = true;
                         lastMessageDate = currentMessageDate;
                     }
-                    // --- END: This is the Fix ---
                     
                     return (
                         <React.Fragment key={idx}>
@@ -133,7 +126,7 @@ const ChatRoom = () => {
                             <div style={{ margin: "0.5rem 0" }}>
                                 <b>{currentUser && msg.sender === currentUser.name ? 'You' : msg.sender}:</b> {msg.text || msg.message}{" "}
                                 <span style={{ fontSize: "0.8rem", color: "gray" }}>
-                                    ({msg.timestamp})
+                                    ({new Date(msg.createdAt).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })})
                                 </span>
                             </div>
                         </React.Fragment>

@@ -56,8 +56,7 @@ export const postMessage = async (req, res) => {
     }
 };
 
-
-
+// Fetch recent messages for a room
 export const getRecentMessages = async (req, res) => {
     try {
         const { roomId } = req.params;
@@ -70,9 +69,6 @@ export const getRecentMessages = async (req, res) => {
             return {
                 message: msg.text,
                 sender: senderName,
-                // --- THIS IS THE CHANGE ---
-                // Send both the formatted time and the full timestamp
-                timestamp: new Date(msg.createdAt).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }),
                 createdAt: msg.createdAt 
             };
         });

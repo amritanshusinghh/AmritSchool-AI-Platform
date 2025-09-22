@@ -30,6 +30,14 @@ app.use("/api/chat", chatRoutes);
 // ✅ Health Check Route
 app.get("/", (req, res) => res.send("✅ API is running"));
 
+
+// In Express backend (server.js or app.js)
+app.get("/health", (req, res) => {
+  res.status(200).send("OK");
+});
+
+
+
 // ✅ Error Handler Last
 app.use(errorHandler);
 

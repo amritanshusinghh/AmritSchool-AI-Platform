@@ -10,7 +10,6 @@ const allowedDomains = [
     'outlook.com',
     'hotmail.com',
     'icloud.com',
-    'aol.com',
     'protonmail.com'
 ];
 

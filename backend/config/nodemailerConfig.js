@@ -11,10 +11,11 @@ dotenv.config();
  */
 export const transporter = nodemailer.createTransport({
     host: process.env.EMAIL_HOST || 'smtp.gmail.com',
-    port: process.env.EMAIL_PORT || 465,
-    secure: true, // true for port 465, false for other ports like 587
+    port: process.env.EMAIL_PORT || 587,
+    secure: process.env.EMAIL_PORT == 465, // auto-detect secure mode
     auth: {
-        user: process.env.EMAIL_USER, // Your full email: ai.amritschool@gmail.com
-        pass: process.env.EMAIL_PASS  // Your 16-digit Google App Password
-    }
+        user: process.env.EMAIL_USER,
+        pass: process.env.EMAIL_PASS,
+    },
 });
+

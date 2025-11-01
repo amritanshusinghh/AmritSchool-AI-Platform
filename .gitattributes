@@ -1,5 +1,0 @@
-# Force LF endings for all text files
-* text=auto eol=lf
-
-# Specific override for JSON (important for Node.js)
-*.json text eol=lf

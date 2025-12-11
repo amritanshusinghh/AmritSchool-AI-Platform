@@ -1,112 +1,124 @@
-import { HfInference } from "@huggingface/inference";
+import { GoogleGenerativeAI, HarmCategory, HarmBlockThreshold } from '@google/generative-ai';
 import dotenv from 'dotenv';
 
 dotenv.config();
 
-if (!process.env.HF_TOKEN) {
-  throw new Error("HF_TOKEN is not defined in the .env file.");
+if (!process.env.GEMINI_API_KEY) {
+  throw new Error("GEMINI_API_KEY is not defined in the .env file.");
 }
 
-const hf = new HfInference(process.env.HF_TOKEN);
+const genAI = new GoogleGenerativeAI(process.env.GEMINI_API_KEY);
 
-// Using a recommended model for chat/instruction-following tasks
-const model = "mistralai/Mixtral-8x7B-Instruct-v0.1";
+// 1. Chat Model
+// UPDATED: Using 'gemini-2.5-flash' as 1.5 is deprecated
+const chatModel = genAI.getGenerativeModel({ 
+    model: "gemini-2.5-flash", 
+    safetySettings: [
+        { category: HarmCategory.HARM_CATEGORY_HARASSMENT, threshold: HarmBlockThreshold.BLOCK_MEDIUM_AND_ABOVE },
+    ]
+});
+
+// 2. Schema Definitions
+const roadmapSchema = {
+    type: "OBJECT",
+    properties: {
+      goal: { type: "STRING" },
+      estimatedDuration: { type: "STRING" },
+      steps: {
+        type: "ARRAY",
+        items: {
+          type: "OBJECT",
+          properties: {
+            id: { type: "NUMBER" },
+            title: { type: "STRING" },
+            description: { type: "STRING" },
+            duration: { type: "STRING" },
+            resources: { type: "ARRAY", items: { type: "STRING" } }
+          },
+          required: ["id", "title", "description", "duration", "resources"]
+        }
+      }
+    },
+    required: ["goal", "estimatedDuration", "steps"]
+};
+  
+const quizSchema = {
+    type: "OBJECT",
+    properties: {
+        topic: { type: "STRING" },
+        questions: {
+            type: "ARRAY",
+            items: {
+                type: "OBJECT",
+                properties: {
+                    question: { type: "STRING" },
+                    options: { type: "ARRAY", items: { type: "STRING" } },
+                    correctAnswer: { type: "STRING" },
+                    explanation: { type: "STRING" }
+                },
+                required: ["question", "options", "correctAnswer", "explanation"]
+            }
+        }
+    },
+    required: ["topic", "questions"]
+};
+
+// 3. Structured Output Models
+// UPDATED: Using 'gemini-2.5-flash'
+const roadmapModel = genAI.getGenerativeModel({
+    model: "gemini-2.5-flash",
+    generationConfig: {
+      responseMimeType: "application/json",
+      responseSchema: roadmapSchema,
+    },
+});
+  
+const quizModel = genAI.getGenerativeModel({
+    model: "gemini-2.5-flash",
+    generationConfig: {
+      responseMimeType: "application/json",
+      responseSchema: quizSchema,
+    },
+});
 
 /**
- * Provides a conversational response to a user's query.
+ * ✅ AI ChatBot
  */
 export const aiChatBot = async (query) => {
-  try {
-    const result = await hf.chatCompletion({
-      model: model,
-      messages: [
-        { role: "system", content: "You are a helpful and friendly AI assistant." },
-        { role: "user", content: query }
-      ],
-      max_tokens: 500,
-    });
-    return result.choices[0].message.content;
-  } catch (error) {
-    console.error("Backend AI Error (Chat):", error);
-    throw new Error("The AI failed to generate a chat response. The model may be temporarily unavailable.");
-  }
+    try {
+        const prompt = `You are a helpful AI study assistant. Answer this student query: "${query}"`;
+        const result = await chatModel.generateContent(prompt);
+        return result.response.text();
+    } catch (error) {
+        console.error("❌ Gemini Chat Error:", error);
+        throw new Error("I'm having trouble thinking right now. Please try again later.");
+    }
 };
 
 /**
- * Generates a learning roadmap for a given goal.
- * @param {string} goal The learning goal.
- * @returns {Promise<object>} A valid roadmap object.
- */
-export const generateRoadmap = async (goal) => {
-  const prompt = `Create a detailed, 4-step learning roadmap for the goal: "${goal}". You must respond with only the raw JSON object, without any surrounding text, explanations, or markdown formatting.
-
-  The JSON schema is:
-  {
-    "goal": "string",
-    "estimatedDuration": "string",
-    "steps": [
-      {
-        "id": "number",
-        "title": "string",
-        "duration": "string",
-        "description": "string",
-        "resources": ["string"]
-      }
-    ]
-  }`;
-
-  try {
-    const result = await hf.chatCompletion({
-      model: model,
-      messages: [{ role: "user", content: prompt }],
-      max_tokens: 1500,
-    });
-
-    const responseText = result.choices[0].message.content;
-    const jsonResponse = responseText.substring(responseText.indexOf('{'));
-    return JSON.parse(jsonResponse);
-  } catch (error) {
-    console.error("Backend AI Error (Roadmap):", error);
-    throw new Error("The AI failed to generate a valid roadmap. The model may be temporarily unavailable.");
-  }
-};
-
-/**
- * Generates a multiple-choice quiz on a given topic.
- * @param {string} topic The topic for the quiz.
- * @returns {Promise<object>} A valid quiz object.
+ * ✅ Quiz Generator
  */
 export const generateQuiz = async (topic) => {
-  const prompt = `
-    Generate a multiple-choice quiz about: "${topic}".
-    It must have exactly 5 questions, and each question must have exactly 4 options.
-    You must respond with only the raw JSON object, without any surrounding text, explanations, or markdown formatting.
-
-    The JSON schema is:
-    {
-      "topic": "string",
-      "questions": [
-        {
-          "question": "string",
-          "options": ["string", "string", "string", "string"],
-          "correctAnswer": "string"
-        }
-      ]
+    try {
+        const prompt = `Generate a multiple-choice quiz about: "${topic}". It must have exactly 5 questions.`;
+        const result = await quizModel.generateContent(prompt);
+        return JSON.parse(result.response.text());
+    } catch (error) {
+        console.error("❌ Gemini Quiz Error:", error);
+        throw new Error("Failed to generate quiz.");
     }
-  `;
+};
 
-  try {
-    const result = await hf.chatCompletion({
-      model: model,
-      messages: [{ role: "user", content: prompt }],
-      max_tokens: 2048,
-    });
-    
-    const responseText = result.choices[0].message.content;
-    const jsonResponse = responseText.substring(responseText.indexOf('{'));
-    return JSON.parse(jsonResponse);
-  } catch (error) {
-    console.error("Backend AI Error (Quiz):", error);
-    throw new Error("The AI failed to generate a valid quiz structure.");
-  }
+/**
+ * ✅ Roadmap Generator
+ */
+export const generateRoadmap = async (goal) => {
+    try {
+        const prompt = `Create a learning roadmap for: "${goal}". Include 4 distinct steps.`;
+        const result = await roadmapModel.generateContent(prompt);
+        return JSON.parse(result.response.text());
+    } catch (error) {
+        console.error("❌ Gemini Roadmap Error:", error);
+        throw new Error("Failed to generate roadmap.");
+    }
 };

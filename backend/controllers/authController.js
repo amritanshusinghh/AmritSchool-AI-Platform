@@ -19,10 +19,12 @@ export const register = async (req, res) => {
 
         // --- START: New Password Strength Feature ---
         // Password validation regex: at least one letter and one number
-        const passwordRegex = /^(?=.*[A-Za-z])(?=.*\d)[A-Za-z\d]{6,}$/;
+        const passwordRegex = /^(?=.*[A-Za-z])(?=.*\d)(?=.*[!@#$%^&*])[A-Za-z\d!@#$%^&*]{6,}$/;
+;
+
         if (!password || !passwordRegex.test(password)) {
             return res.status(400).json({ 
-                message: "Your password must be at least 6 characters and include a mix of letters and numbers." 
+                message: "Password must be at least 6 characters & include letters and numbers with one special character." 
             });
         }
         // --- END: New Password Strength Feature ---

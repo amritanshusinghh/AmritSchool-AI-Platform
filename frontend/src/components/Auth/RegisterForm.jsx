@@ -18,9 +18,11 @@ const RegisterForm = () => {
     useEffect(() => {
         if (password.length > 0) {
             // Password must be at least 6 chars, with one letter and one number
-            const passwordRegex = /^(?=.*[A-Za-z])(?=.*\d)[A-Za-z\d]{6,}$/;
+            const passwordRegex = /^(?=.*[A-Za-z])(?=.*\d)(?=.*[!@#$%^&*])[A-Za-z\d!@#$%^&*]{6,}$/;
+
+
             if (!passwordRegex.test(password)) {
-                setPasswordError("Your password must be at least 6 characters and include a mix of letters and numbers.");
+                setPasswordError("Password must be at least 6 characters & include letters and numbers with one special character.");
                 setIsPasswordValid(false);
             } else {
                 setPasswordError('');

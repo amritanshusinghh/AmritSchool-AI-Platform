@@ -1,23 +1,44 @@
 import Room from "../models/Room.js";
 import Message from "../models/Message.js";
 
-// Create a new chat room
+// Helper to generate a 6-character random code
+const generateRoomCode = () => {
+    return Math.random().toString(36).substring(2, 8).toUpperCase();
+};
+
+// Create a new chat room with a unique code
 export const createRoom = async (req, res) => {
     try {
         const { name } = req.body;
-        const room = await Room.create({ name, createdBy: req.user.id, participants: [req.user.id] });
+        
+        let code = generateRoomCode();
+        // Ensure code uniqueness (simple check)
+        let existingRoom = await Room.findOne({ code });
+        while (existingRoom) {
+            code = generateRoomCode();
+            existingRoom = await Room.findOne({ code });
+        }
+
+        const room = await Room.create({ 
+            name, 
+            code, 
+            createdBy: req.user.id, 
+            participants: [req.user.id] 
+        });
+
         res.status(201).json({ message: "Room created", room });
     } catch (err) {
         res.status(500).json({ message: "Error creating room", error: err.message });
     }
 };
 
-// Join existing room
+// Join existing room using the CODE
 export const joinRoom = async (req, res) => {
     try {
-        const { roomId } = req.body;
-        const room = await Room.findById(roomId);
-        if (!room) return res.status(404).json({ message: "Room not found" });
+        const { code } = req.body; // Expect 'code' instead of roomId
+        const room = await Room.findOne({ code }); // Find by code
+        
+        if (!room) return res.status(404).json({ message: "Invalid Room Code" });
 
         if (!room.participants.includes(req.user.id)) {
             room.participants.push(req.user.id);
@@ -30,7 +51,7 @@ export const joinRoom = async (req, res) => {
     }
 };
 
-// Fetch messages of a room
+// Fetch messages of a room (No changes needed)
 export const getRoomMessages = async (req, res) => {
     try {
         const { roomId } = req.params;
@@ -41,7 +62,7 @@ export const getRoomMessages = async (req, res) => {
     }
 };
 
-// Post message via HTTP (if needed, besides WebSocket)
+// Post message via HTTP (No changes needed)
 export const postMessage = async (req, res) => {
     try {
         const { roomId, text } = req.body;
@@ -56,7 +77,7 @@ export const postMessage = async (req, res) => {
     }
 };
 
-// Fetch recent messages for a room
+// Fetch recent messages for a room (No changes needed)
 export const getRecentMessages = async (req, res) => {
     try {
         const { roomId } = req.params;

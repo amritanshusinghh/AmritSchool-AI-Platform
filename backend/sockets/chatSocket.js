@@ -7,6 +7,14 @@ export const chatSocketHandler = (io) => {
         socket.on("joinRoom", (roomId) => {
             socket.join(roomId);
             console.log(`User ${socket.username} (${socket.id}) joined room ${roomId}`);
+
+            // --- NOTIFICATION LOGIC ADDED HERE ---
+            // Notify others in the room that this user has joined
+            socket.broadcast.to(roomId).emit("receiveMessage", {
+                message: `${socket.username} has joined the room`,
+                sender: "System",
+                createdAt: new Date().toISOString()
+            });
         });
 
         socket.on("sendMessage", async ({ roomId, message }) => {

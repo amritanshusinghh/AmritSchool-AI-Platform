@@ -191,7 +191,7 @@ const StudyRoom = () => {
                                 display: 'inline-block', 
                                 padding: '8px 12px', 
                                 borderRadius: '15px', 
-                                backgroundColor: currentUser && msg.sender === 'You' ? '#ffc0cb' : '#6D8FAB',
+                                backgroundColor: currentUser && msg.sender === 'You' ? '#ffc0cb' : '#90D5FF',
                                 border: '1px solid #ddd'
                             }}>
                                 <strong style={{ fontSize: '0.8rem', display: 'block', marginBottom: '2px' }}>

@@ -8,7 +8,7 @@ const Footer = () => {
     return (
         <footer className="footer-container">
             <p>
-                © 2025 Developed By{' '}
+                © 2026 Developed By{' '}
                 <a 
                     href={portfolioUrl} 
                     className="developer-link" 
